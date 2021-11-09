@@ -1,0 +1,26 @@
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: true
+
+# EntryPoints definition
+entryPoints:
+  websecure:
+    address: "{{ traefik__listen_address }}:443/tcp"
+
+providers:
+  file:
+    directory: "/etc/traefik"
+
+# Traefik logs
+log:
+  level: INFO
+  format: common
+
+# Access logs
+accessLog:
+  format: common
+
+# Enable API and dashboard
+api:
+  insecure: true
+  dashboard: true

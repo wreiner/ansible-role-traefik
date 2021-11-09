@@ -1,0 +1,74 @@
+---
+- set_fact:
+    traefik__arch: "armv7"
+  when: ansible_machine == 'armv7l'
+
+- set_fact:
+    traefik__arch: "armv6"
+  when: ansible_machine == 'armv6l'
+
+- set_fact:
+    traefik__arch: "amd64"
+  when: ansible_machine == 'x86_64'
+
+- name: "Check if traefik version is already installed"
+  stat:
+    path: "/opt/traefik/{{ traefik__version }}.linux-{{ traefik__arch }}"
+  register: _traefik__version_installed
+
+- name: "Create additional traefik directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0750
+  with_items:
+    - "/etc/traefik"
+    - "/opt/traefik/{{ traefik__version }}.linux-{{ traefik__arch }}"
+
+- name: "Install traefik"
+  unarchive:
+    src: "https://github.com/traefik/traefik/releases/download/{{ traefik__version }}/traefik_{{ traefik__version }}_linux_{{ traefik__arch }}.tar.gz"
+    dest: "/opt/traefik/{{ traefik__version }}.linux-{{ traefik__arch }}"
+    remote_src: "yes"
+    owner: "root"
+    group: "root"
+  when: not _traefik__version_installed.stat.exists
+  notify: "Restart traefik"
+
+- name: "Create link to downloaded version"
+  file:
+    src: "/opt/traefik/{{ traefik__version }}.linux-{{ traefik__arch }}"
+    dest: "/opt/traefik/current"
+    owner: "root"
+    group: "root"
+    state: link
+
+- name: "Deploy traefik systemd service file"
+  template:
+    src: "traefik.service.j2"
+    dest: "/etc/systemd/system/traefik.service"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  notify: "Restart traefik"
+
+- name: "Deploy traefik config file"
+  template:
+    src: "traefik.yml.j2"
+    dest: "/etc/traefik/traefik.yml"
+    owner: "root"
+    group: "root"
+    mode: 0640
+  notify: "Restart traefik"
+
+- name: "Deploy inventory rules files"
+  template:
+    src: "{{ item }}"
+    dest: "/etc/traefik/{{ item.split('/') | last }}"
+    owner: "root"
+    group: "root"
+  loop: "{{ traefik__dynamic_config_templates }}"
+  when: traefik__dynamic_config_templates is defined
+  notify: "Restart traefik"
