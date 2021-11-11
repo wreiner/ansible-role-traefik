@@ -3,9 +3,7 @@ global:
   sendAnonymousUsage: true
 
 # EntryPoints definition
-entryPoints:
-  websecure:
-    address: "{{ traefik__listen_address }}:443/tcp"
+{{ traefik__entrypoints | to_yaml }}
 
 providers:
   file:

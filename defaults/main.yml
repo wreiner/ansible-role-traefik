@@ -1,2 +1,7 @@
 ---
 traefik__version: "v2.5.4"
+
+traefik__entrypoints:
+  entryPoints:
+    websecure:
+      address: "{{ traefik__listen_address }}:443/tcp"
