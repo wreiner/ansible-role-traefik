@@ -21,9 +21,40 @@ traefik__entrypoints:
       address: "{{ traefik__listen_address }}:2222/tcp"
 ```
 
-Traefik will read all yaml files for its dynamic configuration provided through the inventory with the variable _traefik__dynamic_config_templates_.
+Traefik will read all yaml files for its dynamic configuration provided through the inventory or the playbook with the variable _traefik__dynamic_config_templates_.
+
+For inventory and non AWX users:
 
 ```
+# example inventory structure
+dev
+├── group_vars
+│   └── all.yml
+├── hosts.yml
+├── host_vars
+│   └── targethost.yml
+└── templates
+    └── traefik
+        └── devvault01-proxy.yml
+
+# host_vars/targethost.yml in inventory
 traefik__dynamic_config_templates:
 - "{{ inventory_dir }}/templates/traefik/devvault01-proxy.yml"
+```
+
+For AWX users the inventory is handled differently. Therefore the templates need to be placed inside the playbook:
+
+```
+# example play structure
+dev-ansible-play-traefik/
+├── playbook.yml
+├── roles
+│   └── requirements.yml
+└── templates
+    └── traefik
+        └── devvault01-proxy.yml
+
+# host_vars/targethost.yml in inventory
+traefik__dynamic_config_templates:
+- "traefik/devvault01-proxy.yml"
 ```
